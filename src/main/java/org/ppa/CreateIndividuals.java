@@ -672,6 +672,7 @@ public class CreateIndividuals {
                break;
             case "oracledb":
                app.setOracleDB(app.m_appProperties.getProperty(key));
+               break;
             default:
                throw new RuntimeException("Unknown option " + key + "!, please check input.conf");
          }
