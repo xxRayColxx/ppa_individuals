@@ -27,7 +27,7 @@ public class CreateIndividuals {
     * If adding extra configurations parameters in input.conf, please change the
     * private final int C_NUMBERCONFIGURATIONPARAMETERS to the corresponding number of parameters.
     */
-   private final int C_NUMBERCONFIGURATIONPARAMETERS = 10;
+   private final int C_NUMBERCONFIGURATIONPARAMETERS = 11;
    private final String C_ORACLESCRIPT = "oraclescript.sql";
    private final String C_H2SCRIPT = "h2script.sql";
 
@@ -41,6 +41,7 @@ public class CreateIndividuals {
    private String triplyDBfile;
    private String oracleScript;
    private String h2script;
+   private String oracleDB;
 
    // Model
    private String defModel; // To be set via input.conf
@@ -164,9 +165,12 @@ public class CreateIndividuals {
    public void setOutputPathEAGenerations(String path) {
       this.outputDataPathEA = System.getenv("OneDrive") + "//" + path;
    }
-
    public void setOracleHandling(String handling) {
       oracleHandling = handling.equals("1");
+   }
+
+   public void setOracleDB(String oracleDB) {
+      this.oracleDB = oracleDB;
    }
 
    public void setModel(String model) {
@@ -526,8 +530,7 @@ public class CreateIndividuals {
          throw new RuntimeException("error loading h2 driver: " + e);
       }
 
-      try (ConnectDatabase conn = oracleHandling ? new ConnectDatabase(
-         "jdbc:oracle:thin:@b9-scan.linux.internalcorp.net:1521/A0DBKP02_prim.office01.internalcorp.net", user, pw) : null;
+      try (ConnectDatabase conn = oracleHandling ? new ConnectDatabase(oracleDB, user, pw) : null;
            Out out = Out.getInstance();
            ConnectDatabase connH2 = new ConnectDatabase("jdbc:h2:/temp/test", "sa", "1234")
       ) {
@@ -667,6 +670,8 @@ public class CreateIndividuals {
             case "addtooracle":
                app.setOracleHandling(app.m_appProperties.getProperty(key));
                break;
+            case "oracledb":
+               app.setOracleDB(app.m_appProperties.getProperty(key));
             default:
                throw new RuntimeException("Unknown option " + key + "!, please check input.conf");
          }
