@@ -348,9 +348,11 @@ public class CreateIndividuals {
          String className;
          while (metaModel.nextClassWithoutLink() != null) {
             className = metaModel.getCurrentActiveClassName().toLowerCase();
-            arLinesRegistration.add("prefix " + className + ": " + classId.replace("[classname]", className));
+            arLinesRegistration.add("prefix " + className + "Registration: " + classId.replace("[classname]", className+ "Registration"));
+            arLinesMainObject.add("prefix " + className + ": " + classId.replace("[classname]", className));        
          }
          plainArrayOutputWithNewLine(arLinesRegistration, out);
+         plainArrayOutputWithNewLine(arLinesMainObject, out);
          out.print("\n");
 
          metaModel.resetCurrentClassNameIterator();
