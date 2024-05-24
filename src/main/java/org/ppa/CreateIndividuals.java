@@ -253,8 +253,13 @@ public class CreateIndividuals {
 
    public String formatKey(String id, Date fvd) {
       String key = "";
-      String fvdFormat = String.format("%1$tY%1$tm%1$td", fvd);
-      key = id + "_" + fvdFormat;
+      if (fvd == null) {
+         key = id;
+      }
+      else {
+         String fvdFormat = String.format("%1$tY%1$tm%1$td", fvd);
+         key = id + "_" + fvdFormat;
+      }
       return key;
    }
 
@@ -298,7 +303,11 @@ public class CreateIndividuals {
             logger.debug("---> relationInfo: " + arRelationInfo.toString());
             for (RelationInfo relationInfo : arRelationInfo) {
                try {
-                  String key = formatKey(resultSet.getString(relationInfo.relationWith + "_id"), resultSet.getDate(relationInfo.relationWith + "_fvd"));
+                  String key = formatKey(
+                     resultSet.getString(relationInfo.relationWith + "_id")
+                     //, resultSet.getDate(relationInfo.relationWith + "_fvd")
+                     ,null
+                  );
                   logger.debug("---> Key for relation: " + key);
                   if (!keysDone.contains(key) && resultSet.getDate("fromvaliditydate").equals(startDate)) {
                      keysDone.add(key);
@@ -316,8 +325,11 @@ public class CreateIndividuals {
    public void makeTurtleData(ConnectDatabase conn, Out out, ReadModelMetadata metaModel) {
       logger.debug("Start makeTriplydata");
 
-      ArrayList<String> arLines = new ArrayList<>();
+      ArrayList<String> arLinesRegistration = new ArrayList<>();
+      ArrayList<String> arLinesMainObject = new ArrayList<>();
+
       ArrayList<RelationInfo> arRelationInfo = new ArrayList<>();
+      Map<String, Boolean> mapMainObjects = new HashMap<>();
 
       try {
          out.setFilename(triplyDBfile);
@@ -329,9 +341,9 @@ public class CreateIndividuals {
          String className;
          while (metaModel.nextClassWithoutLink() != null) {
             className = metaModel.getCurrentActiveClassName().toLowerCase();
-            arLines.add("prefix " + className + ": " + classId.replace("[classname]", className));
+            arLinesRegistration.add("prefix " + className + ": " + classId.replace("[classname]", className));
          }
-         plainArrayOutputWithNewLine(arLines, out);
+         plainArrayOutputWithNewLine(arLinesRegistration, out);
          out.print("\n");
 
          metaModel.resetCurrentClassNameIterator();
@@ -344,7 +356,8 @@ public class CreateIndividuals {
 
             // Do for each data record
             while (data.next()) {
-               arLines.clear();
+               arLinesRegistration.clear();
+               arLinesMainObject.clear();
 
                // Make key, get the data out of the metadata of the database.
                ArrayList<String> arKeys = metaModel.getKeyListForClass(className);
@@ -375,14 +388,24 @@ public class CreateIndividuals {
                   }
                }
 
+               // Chech if the main object exists
+               String keyMainObject = className.toLowerCase() + ":" + id;
+
+               if (!mapMainObjects.containsKey(keyMainObject)) {
+                  mapMainObjects.put(keyMainObject, false);
+               }
+
+               arLinesMainObject.add(keyMainObject);
+               arLinesMainObject.add(indent + "a " + prefix + className + ";");
+
                if (id != null && fvd != null) {
                   keyPart = formatKey(id, fvd) + keyPart;
                }
 
-               arLines.add(className.toLowerCase() + ":" + keyPart);
+               arLinesRegistration.add(className.toLowerCase() + "Registration" + ":" + keyPart);
 
                // Define class type
-               arLines.add(indent + "a " + prefix + className + ";");
+               arLinesRegistration.add(indent + "a " + prefix + className + "Registration" + ";");
 
                Map<String, ModelFieldmeta> fields = metaModel.getFieldsCurrentClassname();
                for (Map.Entry<String, ModelFieldmeta> fld : fields.entrySet()) {
@@ -392,12 +415,16 @@ public class CreateIndividuals {
                   // Format data
                   String owlFormattedString = getOwlFormattedOutput(dataType, data, columnName);
 
-                  boolean skipColumn = columnName.equalsIgnoreCase("tilldate") ||
-                     columnName.equalsIgnoreCase("tillvaliditydate") ||
-                     columnName.equalsIgnoreCase("livesattill");
+                  if (columnName.equals("pensionFundId") || columnName.equals("id")) {
+                     arLinesMainObject.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                  } else {
+                     boolean skipColumn = columnName.equalsIgnoreCase("tilldate") ||
+                        columnName.equalsIgnoreCase("tillvaliditydate") ||
+                        columnName.equalsIgnoreCase("livesattill");
 
-                  if (!(owlFormattedString.contains("9999-12-31") && skipColumn)) {
-                     arLines.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                     if (!(owlFormattedString.contains("9999-12-31") && skipColumn)) {
+                        arLinesRegistration.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                     }
                   }
                }
 
@@ -414,7 +441,7 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
 
                      logger.debug("---\n--- get person relation data, Queries.ROLE_EMPLOYEE\n---");
@@ -426,9 +453,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "Customer":
@@ -441,9 +468,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "SavingsAccount":
@@ -456,9 +483,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "Employee":
@@ -471,7 +498,7 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
 
                   case "ResidentialPeriod":
@@ -485,9 +512,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "WorkHistory":
@@ -501,18 +528,30 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
-                     break;
 
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     changeSemicolonIntoPoint(arLinesRegistration);
+                     break;
                   default:
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                }
 
                // Write the lines to the output device
-               plainArrayOutputWithNewLine(arLines, out);
+               if (!mapMainObjects.get(keyMainObject)) {
+                  arLinesMainObject.add("");
+                  plainArrayOutputWithNewLine(arLinesMainObject, out);
+                  mapMainObjects.put(keyMainObject, true);
+               }
+
+               // Add the reference to the mainObject for the registrion part
+               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0));
+
+               // Registration layer
+               plainArrayOutputWithNewLine(arLinesRegistration, out);
                out.print("\n");
             }
          }
