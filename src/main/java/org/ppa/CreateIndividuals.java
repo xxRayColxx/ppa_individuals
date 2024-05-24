@@ -464,7 +464,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "Customer":
@@ -479,7 +479,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "SavingsAccount":
@@ -494,7 +494,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "Employee":
@@ -523,7 +523,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "WorkHistory":
@@ -541,11 +541,9 @@ public class CreateIndividuals {
                      );
 
                      changeSemicolonIntoPoint(arLinesMainObject);
-                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                   default:
                      changeSemicolonIntoPoint(arLinesMainObject);
-                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                }
 
@@ -557,7 +555,7 @@ public class CreateIndividuals {
                }
 
                // Add the reference to the mainObject for the registrion part
-               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0));
+               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0) + ".");
 
                // Registration layer
                plainArrayOutputWithNewLine(arLinesRegistration, out);
