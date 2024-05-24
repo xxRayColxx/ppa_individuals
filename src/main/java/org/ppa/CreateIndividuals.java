@@ -20,6 +20,8 @@ public class CreateIndividuals {
    private String pw;
    private boolean oracleHandling = false;
 
+   private boolean useOneDrive = false;
+
    private String resourcePath;
    /**
     * Some app Contants
@@ -27,7 +29,7 @@ public class CreateIndividuals {
     * If adding extra configurations parameters in input.conf, please change the
     * private final int C_NUMBERCONFIGURATIONPARAMETERS to the corresponding number of parameters.
     */
-   private final int C_NUMBERCONFIGURATIONPARAMETERS = 11;
+   private final int C_NUMBERCONFIGURATIONPARAMETERS = 12;
    private final String C_ORACLESCRIPT = "oraclescript.sql";
    private final String C_H2SCRIPT = "h2script.sql";
 
@@ -74,7 +76,9 @@ public class CreateIndividuals {
       "prefix owl: <http://www.w3.org/2002/07/owl#>\n" +
       "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
       "prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-      "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n";
+      "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
+      "prefix foaf: <http://xmlns.com/foaf/0.1/>\n";
+
 
    /**
     * Constructor of the program
@@ -138,6 +142,9 @@ public class CreateIndividuals {
       return turtleFile;
    }
 
+   public void setUseOneDrive(Boolean useOneDrive) {
+      this.useOneDrive = useOneDrive;
+   }
    public void setUser(String user) {
       this.user = user;
    }
@@ -155,15 +162,15 @@ public class CreateIndividuals {
    }
 
    public void setExcelPath(String path) {
-      this.inputDataPath = System.getenv("OneDrive") + "//" + path;
+      this.inputDataPath = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
 
    public void setOutputDataPath(String path) {
-      this.outputDataPath = System.getenv("OneDrive") + "//" + path;
+      this.outputDataPath = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
 
    public void setOutputPathEAGenerations(String path) {
-      this.outputDataPathEA = System.getenv("OneDrive") + "//" + path;
+      this.outputDataPathEA = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
    public void setOracleHandling(String handling) {
       oracleHandling = handling.equals("1");
@@ -253,8 +260,13 @@ public class CreateIndividuals {
 
    public String formatKey(String id, Date fvd) {
       String key = "";
-      String fvdFormat = String.format("%1$tY%1$tm%1$td", fvd);
-      key = id + "_" + fvdFormat;
+      if (fvd == null) {
+         key = id;
+      }
+      else {
+         String fvdFormat = String.format("%1$tY%1$tm%1$td", fvd);
+         key = id + "_" + fvdFormat;
+      }
       return key;
    }
 
@@ -298,7 +310,11 @@ public class CreateIndividuals {
             logger.debug("---> relationInfo: " + arRelationInfo.toString());
             for (RelationInfo relationInfo : arRelationInfo) {
                try {
-                  String key = formatKey(resultSet.getString(relationInfo.relationWith + "_id"), resultSet.getDate(relationInfo.relationWith + "_fvd"));
+                  String key = formatKey(
+                     resultSet.getString(relationInfo.relationWith + "_id")
+                     //, resultSet.getDate(relationInfo.relationWith + "_fvd")
+                     ,null
+                  );
                   logger.debug("---> Key for relation: " + key);
                   if (!keysDone.contains(key) && resultSet.getDate("fromvaliditydate").equals(startDate)) {
                      keysDone.add(key);
@@ -316,8 +332,11 @@ public class CreateIndividuals {
    public void makeTurtleData(ConnectDatabase conn, Out out, ReadModelMetadata metaModel) {
       logger.debug("Start makeTriplydata");
 
-      ArrayList<String> arLines = new ArrayList<>();
+      ArrayList<String> arLinesRegistration = new ArrayList<>();
+      ArrayList<String> arLinesMainObject = new ArrayList<>();
+
       ArrayList<RelationInfo> arRelationInfo = new ArrayList<>();
+      Map<String, Boolean> mapMainObjects = new HashMap<>();
 
       try {
          out.setFilename(triplyDBfile);
@@ -329,9 +348,9 @@ public class CreateIndividuals {
          String className;
          while (metaModel.nextClassWithoutLink() != null) {
             className = metaModel.getCurrentActiveClassName().toLowerCase();
-            arLines.add("prefix " + className + ": " + classId.replace("[classname]", className));
+            arLinesRegistration.add("prefix " + className + ": " + classId.replace("[classname]", className));
          }
-         plainArrayOutputWithNewLine(arLines, out);
+         plainArrayOutputWithNewLine(arLinesRegistration, out);
          out.print("\n");
 
          metaModel.resetCurrentClassNameIterator();
@@ -344,7 +363,8 @@ public class CreateIndividuals {
 
             // Do for each data record
             while (data.next()) {
-               arLines.clear();
+               arLinesRegistration.clear();
+               arLinesMainObject.clear();
 
                // Make key, get the data out of the metadata of the database.
                ArrayList<String> arKeys = metaModel.getKeyListForClass(className);
@@ -375,14 +395,24 @@ public class CreateIndividuals {
                   }
                }
 
+               // Chech if the main object exists
+               String keyMainObject = className.toLowerCase() + ":" + id;
+
+               if (!mapMainObjects.containsKey(keyMainObject)) {
+                  mapMainObjects.put(keyMainObject, false);
+               }
+
+               arLinesMainObject.add(keyMainObject);
+               arLinesMainObject.add(indent + "a " + prefix + className + ";");
+
                if (id != null && fvd != null) {
                   keyPart = formatKey(id, fvd) + keyPart;
                }
 
-               arLines.add(className.toLowerCase() + ":" + keyPart);
+               arLinesRegistration.add(className.toLowerCase() + "Registration" + ":" + keyPart);
 
                // Define class type
-               arLines.add(indent + "a " + prefix + className + ";");
+               arLinesRegistration.add(indent + "a " + prefix + className + "Registration" + ";");
 
                Map<String, ModelFieldmeta> fields = metaModel.getFieldsCurrentClassname();
                for (Map.Entry<String, ModelFieldmeta> fld : fields.entrySet()) {
@@ -392,12 +422,16 @@ public class CreateIndividuals {
                   // Format data
                   String owlFormattedString = getOwlFormattedOutput(dataType, data, columnName);
 
-                  boolean skipColumn = columnName.equalsIgnoreCase("tilldate") ||
-                     columnName.equalsIgnoreCase("tillvaliditydate") ||
-                     columnName.equalsIgnoreCase("livesattill");
+                  if (columnName.equals("pensionFundId") || columnName.equals("id")) {
+                     arLinesMainObject.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                  } else {
+                     boolean skipColumn = columnName.equalsIgnoreCase("tilldate") ||
+                        columnName.equalsIgnoreCase("tillvaliditydate") ||
+                        columnName.equalsIgnoreCase("livesattill");
 
-                  if (!(owlFormattedString.contains("9999-12-31") && skipColumn)) {
-                     arLines.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                     if (!(owlFormattedString.contains("9999-12-31") && skipColumn)) {
+                        arLinesRegistration.add(indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
+                     }
                   }
                }
 
@@ -414,7 +448,7 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
 
                      logger.debug("---\n--- get person relation data, Queries.ROLE_EMPLOYEE\n---");
@@ -426,9 +460,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "Customer":
@@ -441,9 +475,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "SavingsAccount":
@@ -456,9 +490,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "Employee":
@@ -471,7 +505,7 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
 
                   case "ResidentialPeriod":
@@ -485,9 +519,9 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
 
                   case "WorkHistory":
@@ -501,18 +535,30 @@ public class CreateIndividuals {
                         , data.getLong("id")
                         , data.getDate("fromvaliditydate")
                         , arRelationInfo
-                        , arLines
+                        , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLines);
-                     break;
 
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     changeSemicolonIntoPoint(arLinesRegistration);
+                     break;
                   default:
-                     changeSemicolonIntoPoint(arLines);
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                }
 
                // Write the lines to the output device
-               plainArrayOutputWithNewLine(arLines, out);
+               if (!mapMainObjects.get(keyMainObject)) {
+                  arLinesMainObject.add("");
+                  plainArrayOutputWithNewLine(arLinesMainObject, out);
+                  mapMainObjects.put(keyMainObject, true);
+               }
+
+               // Add the reference to the mainObject for the registrion part
+               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0));
+
+               // Registration layer
+               plainArrayOutputWithNewLine(arLinesRegistration, out);
                out.print("\n");
             }
          }
@@ -634,6 +680,9 @@ public class CreateIndividuals {
       logger.debug("Start service CreateIndividuals");
       CreateIndividuals app = new CreateIndividuals();
 
+      if (app.m_appProperties.containsKey("useOneDrive")) {
+         app.setUseOneDrive(Boolean.parseBoolean(app.m_appProperties.getProperty("useOneDrive")));
+      }
 
       // Check the input configuration
       int nKeys = 0;
@@ -641,6 +690,8 @@ public class CreateIndividuals {
          nKeys++;
          String key = p.toString();
          switch (key) {
+            case "useOneDrive":
+               break;
             case "user":
                app.setUser(app.m_appProperties.getProperty(key));
                break;
