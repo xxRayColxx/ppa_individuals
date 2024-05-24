@@ -20,6 +20,8 @@ public class CreateIndividuals {
    private String pw;
    private boolean oracleHandling = false;
 
+   private boolean useOneDrive = false;
+
    private String resourcePath;
    /**
     * Some app Contants
@@ -27,7 +29,7 @@ public class CreateIndividuals {
     * If adding extra configurations parameters in input.conf, please change the
     * private final int C_NUMBERCONFIGURATIONPARAMETERS to the corresponding number of parameters.
     */
-   private final int C_NUMBERCONFIGURATIONPARAMETERS = 11;
+   private final int C_NUMBERCONFIGURATIONPARAMETERS = 12;
    private final String C_ORACLESCRIPT = "oraclescript.sql";
    private final String C_H2SCRIPT = "h2script.sql";
 
@@ -138,6 +140,9 @@ public class CreateIndividuals {
       return turtleFile;
    }
 
+   public void setUseOneDrive(Boolean useOneDrive) {
+      this.useOneDrive = useOneDrive;
+   }
    public void setUser(String user) {
       this.user = user;
    }
@@ -155,15 +160,15 @@ public class CreateIndividuals {
    }
 
    public void setExcelPath(String path) {
-      this.inputDataPath = System.getenv("OneDrive") + "//" + path;
+      this.inputDataPath = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
 
    public void setOutputDataPath(String path) {
-      this.outputDataPath = System.getenv("OneDrive") + "//" + path;
+      this.outputDataPath = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
 
    public void setOutputPathEAGenerations(String path) {
-      this.outputDataPathEA = System.getenv("OneDrive") + "//" + path;
+      this.outputDataPathEA = useOneDrive ? System.getenv("OneDrive") + "//" + path : path;
    }
    public void setOracleHandling(String handling) {
       oracleHandling = handling.equals("1");
@@ -673,6 +678,9 @@ public class CreateIndividuals {
       logger.debug("Start service CreateIndividuals");
       CreateIndividuals app = new CreateIndividuals();
 
+      if (app.m_appProperties.containsKey("useOneDrive")) {
+         app.setUseOneDrive(Boolean.parseBoolean(app.m_appProperties.getProperty("useOneDrive")));
+      }
 
       // Check the input configuration
       int nKeys = 0;
@@ -680,6 +688,8 @@ public class CreateIndividuals {
          nKeys++;
          String key = p.toString();
          switch (key) {
+            case "useOneDrive":
+               break;
             case "user":
                app.setUser(app.m_appProperties.getProperty(key));
                break;

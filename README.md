@@ -56,6 +56,18 @@ For examples:
 
 <p style="font-family: 'Consolas';">
 From Intellj: Run the CreateIndividuals.java<br>
+
 From the prompt: java -cp target\CreateIndividuals-1.0-SNAPSHOT.jar org.ppa.CreateIndividuals</p>
 
 You have to be in the directory below the target directory (app main) or add the path of the directory where the jar file is in.
+
+Example: if you run the script in c:\temp then:
+
+1. make a directory: C:\temp\target\classes\input.conf
+2. copy the input.conf to that directory. (input_local.conf can be used if every thing is in c:\temp. You have to rename it to input.conf!)
+3. Point the directories in the input.conf to the desired directories. outputpathEAgenerations points to two necessary input files, see metaData in\
+   the repositoy. If you point this one to c:\temp, then please copy the two file (datamodelscript.sql and modelmeta.dat) to c:\temp
+4. If you point the source file to c:\temp, then you have to copy the source also to the c:\temp (testdata_v7.xlsx is\
+   in the repository in the sourceData dir)
+5. If you don't need Oracle, then leave the input.conf for that settings as is.
+6. 
