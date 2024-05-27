@@ -6,26 +6,6 @@ import java.text.SimpleDateFormat;
 public enum Queries {
 
    // TODO generate this information from the UML model!
-   PERSON_ADDRESS("" +
-      "select p.id as person_id\n" +
-      ",      p.fromvaliditydate as fromvaliditydate\n" +
-      ",      a.id as address_id\n" +
-      ",      a.fromvaliditydate as address_fvd\n" +
-      ",      a.tillvaliditydate as address_tvd\n" +
-      "from\n" +
-      "   person  p\n" +
-      "join LINK_RESIDENTIALPERIOD l_rp on person_id = p.id\n" +
-      "join residentialperiod rp on l_rp.residentialperiod_id = rp.id\n" +
-      "   and rp.fromValidityDate <= [administrationstatedate]\n" +
-      "   and rp.tillValidityDate > [administrationstatedate]\n" +
-      "join address a on a.id = l_rp.address_id\n" +
-      "   and a.fromValidityDate <= [administrationstatedate]\n" +
-      "   and a.tillValidityDate > [administrationstatedate]\n" +
-      "where p.id = [id]\n" +
-      "   and p.fromValidityDate <= [administrationstatedate]\n" +
-      "   and p.tillValidityDate > [administrationstatedate]" +
-      "\n"
-   ),
    ROLE_CUSTOMER(""+
       "select p.id\n" +
       ",      p.fromvaliditydate as fromvaliditydate\n" +
@@ -41,7 +21,8 @@ public enum Queries {
       "   and c.tillvaliditydate > [administrationstatedate]\n" +
       "where p.id = [id]\n" +
       "and   p.fromvaliditydate <= [administrationstatedate]\n" +
-      "and   p.tillvaliditydate > [administrationstatedate]"
+      "and   p.tillvaliditydate > [administrationstatedate]\n" +
+      "order by 2, 3, 4"
    ),
    ROLE_EMPLOYEE(""+
       "select p.id\n" +
@@ -58,7 +39,8 @@ public enum Queries {
       "   and e.tillvaliditydate > [administrationstatedate]\n" +
       "where p.id = [id]\n" +
       "and   p.fromvaliditydate <= [administrationstatedate]\n" +
-      "and   p.tillvaliditydate > [administrationstatedate]"
+      "and   p.tillvaliditydate > [administrationstatedate]\n" +
+      "order by 2, 3, 4"
    ),
    CUSTOMER_PERSON("" +
       "select c.id\n" +
@@ -75,7 +57,8 @@ public enum Queries {
       "   and p.tillvaliditydate > [administrationstatedate]\n" +
       "where c.id = [id]\n" +
       "and   c.fromvaliditydate <= [administrationstatedate]\n" +
-      "and   c.tillvaliditydate > [administrationstatedate]"
+      "and   c.tillvaliditydate > [administrationstatedate]\n" +
+      "order by 2, 3, 4"
    ),
    EMPLOYEE_PERSON( "" +
       "select e.id\n" +
@@ -92,7 +75,8 @@ public enum Queries {
       "   and p.tillvaliditydate > [administrationstatedate]\n" +
       "where e.id = [id]\n" +
       "and   e.fromvaliditydate <= [administrationstatedate]\n" +
-      "and   e.tillvaliditydate > [administrationstatedate]"
+      "and   e.tillvaliditydate > [administrationstatedate]\n"+
+      "order by 2, 3, 4"
    ),
    SAVINGSACCOUNT(""+
       "select distinct s.id\n" +
@@ -105,25 +89,8 @@ public enum Queries {
       "   and c.tillvaliditydate > [administrationstatedate]\n" +
       "where  s.id = [id]\n" +
       "and s.fromvaliditydate <= [administrationstatedate]\n" +
-      "and s.tillvaliditydate > [administrationstatedate]"
-   ),
-   EMPLOYEE_EMPLOYER( "" +
-      "select distinct e.id as employee_id\n" +
-      ",      e.fromvaliditydate as fromvaliditydate\n" +
-      ",      l_wh.employer_id as employer_id\n" +
-      ",      em.fromvaliditydate as employer_fvd\n" +
-      "from\n" +
-      "   employee e\n" +
-      "join link_workhistory l_wh on e.id = l_wh.employee_id\n" +
-      "join workhistory w on l_wh.workhistory_id = w.id\n" +
-      "   and w.fromValidityDate <= [administrationstatedate]\n" +
-      "   and w.tillValidityDate > [administrationstatedate]\n" +
-      "join employer em on l_wh.employer_id = em.id\n" +
-      "   and em.fromValidityDate <= [administrationstatedate]\n" +
-      "   and em.tillValidityDate > [administrationstatedate]\n" +
-      "where e.id = [id]\n" +
-      "   and e.fromValidityDate <= [administrationstatedate]\n" +
-      "   and e.tillValidityDate > [administrationstatedate]"
+      "and s.tillvaliditydate > [administrationstatedate]\n"+
+      "order by 2, 3, 4"
    ),
    RESIDIENTAL_PERSON_ADDRESS("" +
       "select rp.id\n" +
@@ -142,7 +109,8 @@ public enum Queries {
       "   and p.tillvaliditydate > [administrationstatedate]\n" +
       "where rp.id = [id]\n" +
       "and rp.fromvaliditydate <= [administrationstatedate]\n" +
-      "and rp.tillvaliditydate > [administrationstatedate]"
+      "and rp.tillvaliditydate > [administrationstatedate]\n" +
+      "order by 2, 3, 4, 5, 6"
    ),
    WORKHISTORY_EMPLOYER_EMPLOYEE("" +
       "select w.id\n"+
@@ -161,7 +129,8 @@ public enum Queries {
       "   and em.tillvaliditydate > [administrationstatedate]\n" +
       "where w.id = [id]\n" +
       "and w.fromvaliditydate <= [administrationstatedate]\n" +
-      "and w.tillvaliditydate > [administrationstatedate]"
+      "and w.tillvaliditydate > [administrationstatedate]\n" +
+      "order by 2, 3, 4, 5, 6"
    );
 
    private String query;

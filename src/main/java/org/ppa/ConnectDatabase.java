@@ -44,7 +44,7 @@ public class ConnectDatabase implements Closeable {
 
       try {
          Statement stmt = m_Conn.createStatement();
-         String query = "select * from " + tableName;
+         String query = "select * from " + tableName + " order by id, fromvaliditydate";
          result = stmt.executeQuery(query);
       } catch (Exception e) {
          System.out.println("error in getData for tableName: " + tableName + ", error: " + e);

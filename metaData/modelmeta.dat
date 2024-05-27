@@ -11,7 +11,7 @@ Person,id,long,1
 Person,tillValidityDate,dateTime,0
 SavingsAccount,amount,float,0
 SavingsAccount,accountNumber,string(50),0
-SavingsAccount,product,string(2),1
+SavingsAccount,savingsAccountProduct,string(2),1
 SavingsAccount,measuredAt,date,1
 SavingsAccount,pensionFundId,int,0
 SavingsAccount,fromValidityDate,dateTime,1
@@ -43,7 +43,7 @@ Address,fromValidityDate,dateTime,1
 Address,id,long,1
 Address,tillValidityDate,dateTime,0
 Inlay,inlayDate,date,1
-Inlay,product,string(2),1
+Inlay,inlayProduct,string(2),1
 Inlay,inlayAmount,float,0
 Inlay,pensionFundId,int,0
 Inlay,fromValidityDate,dateTime,1
