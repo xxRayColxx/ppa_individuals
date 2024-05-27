@@ -76,7 +76,9 @@ public class CreateIndividuals {
       "prefix owl: <http://www.w3.org/2002/07/owl#>\n" +
       "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>\n" +
       "prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#>\n" +
-      "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n";
+      "prefix xsd: <http://www.w3.org/2001/XMLSchema#>\n" + 
+      "prefix foaf: <http://xmlns.com/foaf/0.1/>\n";
+
 
    /**
     * Constructor of the program
@@ -346,9 +348,11 @@ public class CreateIndividuals {
          String className;
          while (metaModel.nextClassWithoutLink() != null) {
             className = metaModel.getCurrentActiveClassName().toLowerCase();
-            arLinesRegistration.add("prefix " + className + ": " + classId.replace("[classname]", className));
+            arLinesRegistration.add("prefix " + className + "Registration: " + classId.replace("[classname]", className+ "Registration"));
+            arLinesMainObject.add("prefix " + className + ": " + classId.replace("[classname]", className));        
          }
          plainArrayOutputWithNewLine(arLinesRegistration, out);
+         plainArrayOutputWithNewLine(arLinesMainObject, out);
          out.print("\n");
 
          metaModel.resetCurrentClassNameIterator();
@@ -460,7 +464,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "Customer":
@@ -475,7 +479,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "SavingsAccount":
@@ -490,7 +494,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "Employee":
@@ -519,7 +523,7 @@ public class CreateIndividuals {
                         , arRelationInfo
                         , arLinesMainObject
                      );
-                     changeSemicolonIntoPoint(arLinesRegistration);
+                     changeSemicolonIntoPoint(arLinesMainObject);
                      break;
 
                   case "WorkHistory":
@@ -537,11 +541,9 @@ public class CreateIndividuals {
                      );
 
                      changeSemicolonIntoPoint(arLinesMainObject);
-                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                   default:
                      changeSemicolonIntoPoint(arLinesMainObject);
-                     changeSemicolonIntoPoint(arLinesRegistration);
                      break;
                }
 
@@ -553,7 +555,7 @@ public class CreateIndividuals {
                }
 
                // Add the reference to the mainObject for the registrion part
-               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0));
+               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0) + ".");
 
                // Registration layer
                plainArrayOutputWithNewLine(arLinesRegistration, out);
