@@ -62,9 +62,9 @@ Employer,tillValidityDate,dateTime,0
 connectedPhone,hasPhoneFromDate,date,1                
 connectedPhone,hasPhoneTillDate,date,1                
 connectedPhone,pensionFundId,number,0              
-connectedPhone,fromValidityDate,timestamp,1           
+connectedPhone,fromValidityDate,dateTime,1           
 connectedPhone,id,number,1             
-connectedPhone,tillValidityDate,timestamp,0
+connectedPhone,tillValidityDate,dateTime,0
 contactPerson,subject,number,1              
 contactPerson,pensionFundId,number,0              
 contactPerson,fromValidityDate,timestamp,1           
@@ -80,9 +80,9 @@ MobilePhone,validNumber,number,1
 MobilePhone,country,varchar2,1            
 MobilePhone,phoneNumber,varchar2,1           
 MobilePhone,pensionFundId,number,0             
-MobilePhone,fromValidityDate,timestamp,1          
+MobilePhone,fromValidityDate,dateTime,1          
 MobilePhone,id,number,1              
-MobilePhone,tillValidityDate,timestamp,0
+MobilePhone,tillValidityDate,dateTime,0
 Email,valid,number,1             
 Email,email,varchar2,1           
 Email,pensionFundId,number,0              
