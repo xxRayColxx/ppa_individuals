@@ -111,7 +111,7 @@ link_WorkHistory,WorkHistory_id,long,1
 link_WorkHistory,Employee_id,long,1
 link_WorkHistory,Employer_id,long,1
 link_connectedEmail,Person_id,long,1
-link_connectedEmail,connectedEmail_id,long,1
+link_connectedEmail,connectedemail_id,long,1
 link_connectedEmail,email_id,long,1
 link_representive,representive_id,long,1
 link_representive,contactPerson_id,long,1
