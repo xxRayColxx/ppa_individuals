@@ -328,7 +328,6 @@ public class CreateIndividuals {
    public void makeTurtleData(ConnectDatabase conn, Out out, ReadModelMetadata metaModel) {
       logger.debug("Start makeTriplydata");
 
-      ArrayList<String> arLinesRegistration = new ArrayList<>();
       ArrayList<String> arLinesMainObject = new ArrayList<>();
 
       ArrayList<RelationInfo> arRelationInfo = new ArrayList<>();
@@ -344,11 +343,9 @@ public class CreateIndividuals {
          String className;
          while (metaModel.nextClassWithoutLink() != null) {
             className = metaModel.getCurrentActiveClassName().toLowerCase();
-            arLinesRegistration.add("prefix " + className + "Registration: "
-                  + classId.replace("[classname]", className + "Registration"));
             arLinesMainObject.add("prefix " + className + ": " + classId.replace("[classname]", className));
          }
-         plainArrayOutputWithNewLine(arLinesRegistration, out);
+
          plainArrayOutputWithNewLine(arLinesMainObject, out);
          out.print("\n");
 
@@ -362,7 +359,7 @@ public class CreateIndividuals {
 
             // Do for each data record
             while (data.next()) {
-               arLinesRegistration.clear();
+
                arLinesMainObject.clear();
 
                // Make key, get the data out of the metadata of the database.
@@ -408,11 +405,6 @@ public class CreateIndividuals {
                   keyPart = formatKey(id, fvd) + keyPart;
                }
 
-               arLinesRegistration.add(className.toLowerCase() + "Registration" + ":" + keyPart);
-
-               // Define class type
-               arLinesRegistration.add(indent + "a " + prefix + className + "Registration" + ";");
-
                Map<String, ModelFieldmeta> fields = metaModel.getFieldsCurrentClassname();
                for (Map.Entry<String, ModelFieldmeta> fld : fields.entrySet()) {
                   String columnName = fld.getValue().name;
@@ -430,7 +422,7 @@ public class CreateIndividuals {
                            columnName.equalsIgnoreCase("livesattill");
 
                      if (!(owlFormattedString.contains("9999-12-31") && skipColumn)) {
-                        arLinesRegistration.add(
+                        arLinesMainObject.add(
                               indent + prefix + columnName + " '" + owlFormattedString + "'^^" + owlDataType + ";");
                      }
                   }
@@ -518,12 +510,6 @@ public class CreateIndividuals {
                   plainArrayOutputWithNewLine(arLinesMainObject, out);
                   mapMainObjects.put(keyMainObject, true);
                }
-
-               // Add the reference to the mainObject for the registrion part
-               arLinesRegistration.add(indent + "foaf:primaryTopic " + arLinesMainObject.get(0) + ".");
-
-               // Registration layer
-               plainArrayOutputWithNewLine(arLinesRegistration, out);
                out.print("\n");
             }
          }
