@@ -517,7 +517,7 @@ public class CreateIndividuals {
                      logger.debug("get ConnectedPhone relation data, Queries.CONNECTEDPHONE_MOBILEPHONE_PERSON");
                      arRelationInfo.clear();
                      arRelationInfo.add(new RelationInfo("personHasPhone", "person"));
-                     arRelationInfo.add(new RelationInfo("phoneConnectedTo", "MobilePhone"));
+                     arRelationInfo.add(new RelationInfo("phoneConnectedTo", "mobilephone"));
                      setRelationData(
                            conn, Queries.CONNECTEDPHONE_MOBILEPHONE_PERSON, data.getLong("id"),
                            data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
