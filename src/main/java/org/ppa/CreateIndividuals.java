@@ -265,6 +265,7 @@ public class CreateIndividuals {
 
    public String formatKey(String id, Date fvd) {
       String key = "";
+
       if (fvd == null) {
          key = id;
       } else {
@@ -304,12 +305,12 @@ public class CreateIndividuals {
          ResultSet resultSet = conn.getQueryData(qry.getParameteredQuery(id, currentDate));
          while (resultSet.next()) {
             logger.debug("---> relationInfo: " + arRelationInfo.toString());
+
             for (RelationInfo relationInfo : arRelationInfo) {
                try {
                   String key = formatKey(
-                        resultSet.getString(relationInfo.relationWith + "_id")
-                        // , resultSet.getDate(relationInfo.relationWith + "_fvd")
-                        , null);
+                        resultSet.getString(relationInfo.relationWith + "_id"),
+                        resultSet.getDate(relationInfo.relationWith + "_fvd"));
                   logger.debug("---> Key for relation: " + key);
                   if (!keysDone.contains(key) && resultSet.getDate("fromvaliditydate").equals(startDate)) {
                      keysDone.add(key);
@@ -392,7 +393,10 @@ public class CreateIndividuals {
                }
 
                // Chech if the main object exists
-               String keyMainObject = className.toLowerCase() + ":" + id;
+               if (id != null && fvd != null) {
+                  keyPart = formatKey(id, fvd) + keyPart;
+               }
+               String keyMainObject = className.toLowerCase() + ":" + keyPart;
 
                if (!mapMainObjects.containsKey(keyMainObject)) {
                   mapMainObjects.put(keyMainObject, false);
@@ -400,10 +404,6 @@ public class CreateIndividuals {
 
                arLinesMainObject.add(keyMainObject);
                arLinesMainObject.add(indent + "a " + prefix + className + ";");
-
-               if (id != null && fvd != null) {
-                  keyPart = formatKey(id, fvd) + keyPart;
-               }
 
                Map<String, ModelFieldmeta> fields = metaModel.getFieldsCurrentClassname();
                for (Map.Entry<String, ModelFieldmeta> fld : fields.entrySet()) {
@@ -454,7 +454,8 @@ public class CreateIndividuals {
                      arRelationInfo.clear();
                      arRelationInfo.add(new RelationInfo("playedBy", "person"));
                      setRelationData(
-                           conn, Queries.CUSTOMER_PERSON, data.getLong("id"), data.getDate("fromvaliditydate"),
+                           conn, Queries.CUSTOMER_PERSON, data.getLong("id"),
+                           data.getDate("fromvaliditydate"),
                            arRelationInfo, arLinesMainObject);
                      changeSemicolonIntoPoint(arLinesMainObject);
                      break;
@@ -464,7 +465,8 @@ public class CreateIndividuals {
                      arRelationInfo.clear();
                      arRelationInfo.add(new RelationInfo("isPartOf", "customer"));
                      setRelationData(
-                           conn, Queries.SAVINGSACCOUNT, data.getLong("id"), data.getDate("fromvaliditydate"),
+                           conn, Queries.SAVINGSACCOUNT, data.getLong("id"),
+                           data.getDate("fromvaliditydate"),
                            arRelationInfo, arLinesMainObject);
                      changeSemicolonIntoPoint(arLinesMainObject);
                      break;
@@ -474,7 +476,8 @@ public class CreateIndividuals {
                      arRelationInfo.clear();
                      arRelationInfo.add(new RelationInfo("playedBy", "person"));
                      setRelationData(
-                           conn, Queries.EMPLOYEE_PERSON, data.getLong("id"), data.getDate("fromvaliditydate"),
+                           conn, Queries.EMPLOYEE_PERSON, data.getLong("id"),
+                           data.getDate("fromvaliditydate"),
                            arRelationInfo, arLinesMainObject);
 
                   case "ResidentialPeriod":
@@ -495,6 +498,45 @@ public class CreateIndividuals {
                      arRelationInfo.add(new RelationInfo("has", "employee"));
                      setRelationData(
                            conn, Queries.WORKHISTORY_EMPLOYER_EMPLOYEE, data.getLong("id"),
+                           data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
+
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     break;
+                  case "connectedEmail":
+                     logger.debug("get ConnectedEmail relation data, Queries.CONNECTEDEMAIL_EMAIL_PERSON");
+                     arRelationInfo.clear();
+                     arRelationInfo.add(new RelationInfo("personHasEmail", "person"));
+                     arRelationInfo.add(new RelationInfo("emailConnectedTo", "email"));
+                     setRelationData(
+                           conn, Queries.CONNECTEDEMAIL_EMAIL_PERSON, data.getLong("id"),
+                           data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
+
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     break;
+                  case "connectedPhone":
+                     logger.debug("get ConnectedPhone relation data, Queries.CONNECTEDPHONE_MOBILEPHONE_PERSON");
+                     arRelationInfo.clear();
+                     arRelationInfo.add(new RelationInfo("personHasPhone", "person"));
+                     arRelationInfo.add(new RelationInfo("phoneConnectedTo", "MobilePhone"));
+                     setRelationData(
+                           conn, Queries.CONNECTEDPHONE_MOBILEPHONE_PERSON, data.getLong("id"),
+                           data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
+
+                     changeSemicolonIntoPoint(arLinesMainObject);
+                     break;
+                  case "RelationShip":
+                     logger.debug("get RelationShip relations data, Queries.RELATIONSHIP_TO_PERSON");
+                     arRelationInfo.clear();
+                     arRelationInfo.add(new RelationInfo("withRelation", "person"));
+                     setRelationData(
+                           conn, Queries.RELATIONSHIP_TO_PERSON, data.getLong("id"),
+                           data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
+
+                     logger.debug("get RelationShip relations data, Queries.RELATIONSHIP_FROM_PERSON");
+                     arRelationInfo.clear();
+                     arRelationInfo.add(new RelationInfo("hasRelation", "person"));
+                     setRelationData(
+                           conn, Queries.RELATIONSHIP_FROM_PERSON, data.getLong("id"),
                            data.getDate("fromvaliditydate"), arRelationInfo, arLinesMainObject);
 
                      changeSemicolonIntoPoint(arLinesMainObject);
